@@ -34,9 +34,11 @@ Pull the image:
 
 ```bash
 docker pull ghcr.io/icoretech/codex-docker:${CODEX_VERSION}
+docker pull ghcr.io/icoretech/codex-docker:latest
 ```
 
 You can find available tags on the [GitHub Packages page](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker).
+Use `${CODEX_VERSION}` for reproducible deployments and `latest` as a convenience tag for quick trials.
 
 The image defaults to plain `codex`, so the caller decides what to run:
 

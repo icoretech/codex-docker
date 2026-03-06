@@ -84,6 +84,7 @@ jobs:
             org.opencontainers.image.vendor=iCoreTech, Inc.
           tags: |
             type=raw,value=${{ env.VERSION }}
+            type=raw,value=latest
 
       - name: Login to GitHub Container Registry
         if: steps.publish_strategy.outputs.should_publish == 'true'
