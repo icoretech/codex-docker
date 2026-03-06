@@ -21,12 +21,6 @@ Image characteristics:
 - persistent config/auth/log state lives under `CODEX_HOME`
 - includes an opt-in `codex-bootstrap` helper for login-oriented container flows
 
-Published tags behavior:
-
-- when `CODEX_RELEASE_TAG` changes, the workflow publishes the semantic Codex version tag, for example `0.111.0`
-- pushes that do not change `CODEX_RELEASE_TAG` do not publish a new image version
-- `workflow_dispatch` can be used to republish the current semantic tag if needed
-
 ## 💡 Usage
 
 Pull the image:
