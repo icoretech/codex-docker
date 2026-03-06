@@ -67,6 +67,49 @@ docker run --rm -it \
   ghcr.io/icoretech/codex-docker:0.111.0 codex-bootstrap status
 ```
 
+## 🧭 Compose Demo
+
+A runnable Compose demo lives at `examples/compose.yml`. It is meant to show
+real invocation patterns, not just a YAML skeleton.
+
+Available profiles:
+
+- `cli`: plain interactive `codex`
+- `exec`: safe `codex exec` demo using `--skip-git-repo-check`, `--ephemeral`, and `-C /workspace`
+- `mcp`: stdio `codex mcp-server`
+- `native-login-api-key`: built-in `codex login --with-api-key`
+- `native-login-device`: built-in `codex login --device-auth`
+- `native-login-status`: built-in `codex login status`
+- `helper-login-api-key`: `codex-bootstrap api-key-login`
+- `helper-login-device`: `codex-bootstrap device-auth`
+- `helper-status`: `codex-bootstrap status`
+
+Basic examples:
+
+```bash
+docker compose -f examples/compose.yml --profile cli run --rm cli
+
+docker compose -f examples/compose.yml --profile exec run --rm exec
+
+docker compose -f examples/compose.yml --profile mcp run --rm -T mcp mcp-server --help
+
+printf '%s\n' "$OPENAI_API_KEY" | \
+  docker compose -f examples/compose.yml --profile native-login-api-key run --rm -T native-login-api-key
+
+docker compose -f examples/compose.yml --profile native-login-device run --rm native-login-device
+
+docker compose -f examples/compose.yml --profile helper-login-api-key run --rm helper-login-api-key
+```
+
+Notes:
+
+- all profiles share the same named `codex_home` volume, so login state persists across runs
+- `mcp-server` is stdio-only, so use `-T` when you want a clean non-TTY stream; drop `--help` when wiring it to a real MCP client
+- `native-login-api-key` reads the key from stdin, while `helper-login-api-key` reads `OPENAI_API_KEY` or `CODEX_OPENAI_API_KEY` from the environment
+- the `exec` profile intentionally demonstrates the common container flags you usually want outside a checked-out Git repo
+- set `CODEX_IMAGE=codex-docker:local` if you want to exercise a locally built image with the same Compose file
+- `examples/workspace/` is bind-mounted as `/workspace`; put a real repo there before replacing the demo `exec --help` with an actual prompt
+
 ## 🧪 Local Verification
 
 ```bash

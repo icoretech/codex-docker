@@ -1,0 +1,99 @@
+name: codex-docker-demo
+
+x-codex-service: &codex-service
+  image: ${CODEX_IMAGE:-ghcr.io/icoretech/codex-docker:0.111.0}
+  working_dir: /workspace
+  environment:
+    CODEX_HOME: /home/codex/.codex
+  volumes:
+    - codex_home:/home/codex/.codex
+    - type: bind
+      source: ./workspace
+      target: /workspace
+
+x-interactive-codex-service: &interactive-codex-service
+  <<: *codex-service
+  stdin_open: true
+  tty: true
+
+services:
+  cli:
+    <<: *interactive-codex-service
+    profiles:
+      - cli
+
+  exec:
+    <<: *interactive-codex-service
+    profiles:
+      - exec
+    command:
+      - exec
+      - --skip-git-repo-check
+      - --ephemeral
+      - -C
+      - /workspace
+      - --help
+
+  mcp:
+    <<: *codex-service
+    profiles:
+      - mcp
+    stdin_open: true
+    command:
+      - mcp-server
+
+  native-login-api-key:
+    <<: *codex-service
+    profiles:
+      - native-login-api-key
+    stdin_open: true
+    command:
+      - login
+      - --with-api-key
+
+  native-login-device:
+    <<: *interactive-codex-service
+    profiles:
+      - native-login-device
+    command:
+      - login
+      - --device-auth
+
+  native-login-status:
+    <<: *interactive-codex-service
+    profiles:
+      - native-login-status
+    command:
+      - login
+      - status
+
+  helper-login-api-key:
+    <<: *codex-service
+    profiles:
+      - helper-login-api-key
+    stdin_open: true
+    environment:
+      CODEX_HOME: /home/codex/.codex
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    command:
+      - codex-bootstrap
+      - api-key-login
+
+  helper-login-device:
+    <<: *interactive-codex-service
+    profiles:
+      - helper-login-device
+    command:
+      - codex-bootstrap
+      - device-auth
+
+  helper-status:
+    <<: *interactive-codex-service
+    profiles:
+      - helper-status
+    command:
+      - codex-bootstrap
+      - status
+
+volumes:
+  codex_home:
