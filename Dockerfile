@@ -35,6 +35,9 @@ RUN apk add --no-cache \
  && mkdir -p /home/codex/.codex /workspace \
  && chown -R codex:codex /home/codex /workspace
 
+LABEL org.opencontainers.image.source="https://github.com/icoretech/codex-docker" \
+      org.opencontainers.image.description="Multi-arch OpenAI Codex CLI Docker image built from official upstream releases"
+
 COPY --from=downloader /tmp/codex /usr/local/bin/codex
 COPY scripts/codex-bootstrap /usr/local/bin/codex-bootstrap
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
