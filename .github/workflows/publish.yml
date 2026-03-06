@@ -1,0 +1,96 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - scripts/**
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Read Codex version from Dockerfile
+        id: version
+        run: |
+          RELEASE_TAG=$(awk -F= '/^ARG CODEX_RELEASE_TAG=/{print $2; exit}' Dockerfile)
+          if [ -z "$RELEASE_TAG" ]; then
+            echo "Could not read CODEX_RELEASE_TAG from Dockerfile" >&2
+            exit 1
+          fi
+          VERSION="${RELEASE_TAG#rust-v}"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Decide publish tags strategy
+        id: publish_strategy
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "publish_version_tag=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            echo "publish_version_tag=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          OLD_RELEASE_TAG=$(git show HEAD^:Dockerfile 2>/dev/null | awk -F= '/^ARG CODEX_RELEASE_TAG=/{print $2; exit}')
+          if [ -z "$OLD_RELEASE_TAG" ] || [ "$OLD_RELEASE_TAG" != "${RELEASE_TAG}" ]; then
+            echo "publish_version_tag=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish_version_tag=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/icoretech/codex-docker
+          labels: |
+            org.opencontainers.image.description=OpenAI Codex CLI
+            org.opencontainers.image.source=https://github.com/icoretech/codex-docker
+            org.opencontainers.image.title=codex
+            org.opencontainers.image.vendor=iCoreTech, Inc.
+          tags: |
+            type=raw,value=${{ env.VERSION }},enable=${{ steps.publish_strategy.outputs.publish_version_tag == 'true' }}
+            type=sha,prefix=${{ env.VERSION }}-,format=short,enable=true
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max

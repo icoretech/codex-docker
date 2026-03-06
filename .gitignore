@@ -1,0 +1,6 @@
+.DS_Store
+.act/
+.env
+docs/
+dist/
+tmp/

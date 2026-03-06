@@ -1,0 +1,56 @@
+name: Build
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - Dockerfile
+      - scripts/**
+      - renovate.json
+      - .github/workflows/build.yml
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Read Codex version from Dockerfile
+        id: version
+        run: |
+          RELEASE_TAG=$(awk -F= '/^ARG CODEX_RELEASE_TAG=/{print $2; exit}' Dockerfile)
+          if [ -z "$RELEASE_TAG" ]; then
+            echo "Could not read CODEX_RELEASE_TAG from Dockerfile" >&2
+            exit 1
+          fi
+          VERSION="${RELEASE_TAG#rust-v}"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: codex-docker:test
+          provenance: false
+
+      - name: Run smoke tests
+        run: IMAGE=codex-docker:test ./scripts/smoke-test.sh

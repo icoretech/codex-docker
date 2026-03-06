@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex"],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "platformAutomerge": false,
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "rebaseWhen": "conflicted",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s+ARG CODEX_RELEASE_TAG=(?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "regex:^rust-v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Automerge Codex release tag updates",
+      "matchManagers": ["custom.regex"],
+      "matchUpdateTypes": ["major", "minor", "patch", "pin", "digest", "rollback", "replacement"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ]
+}

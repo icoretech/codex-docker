@@ -1,0 +1,62 @@
+#!/usr/bin/env sh
+set -eu
+
+CONFIG_OVERRIDE='cli_auth_credentials_store="file"'
+
+ensure_codex_home() {
+  mkdir -p "${CODEX_HOME:-$HOME/.codex}"
+}
+
+run_codex() {
+  codex -c "$CONFIG_OVERRIDE" "$@"
+}
+
+print_help() {
+  cat <<'EOF'
+Codex container helper
+
+Usage:
+  codex-bootstrap help
+  codex-bootstrap status
+  codex-bootstrap api-key-login
+  codex-bootstrap device-auth
+  codex-bootstrap logout
+
+Environment:
+  OPENAI_API_KEY or CODEX_OPENAI_API_KEY  API key used by api-key-login
+EOF
+}
+
+command="${1:-help}"
+
+case "$command" in
+  help|-h|--help)
+    print_help
+    ;;
+  status)
+    ensure_codex_home
+    run_codex login status
+    ;;
+  api-key-login)
+    ensure_codex_home
+    api_key="${CODEX_OPENAI_API_KEY:-${OPENAI_API_KEY:-}}"
+    if [ -z "$api_key" ]; then
+      echo "OPENAI_API_KEY or CODEX_OPENAI_API_KEY is required" >&2
+      exit 2
+    fi
+    printf '%s' "$api_key" | run_codex login --with-api-key
+    ;;
+  device-auth)
+    ensure_codex_home
+    exec codex -c "$CONFIG_OVERRIDE" login --device-auth
+    ;;
+  logout)
+    ensure_codex_home
+    exec codex -c "$CONFIG_OVERRIDE" logout
+    ;;
+  *)
+    echo "Unknown command: $command" >&2
+    print_help >&2
+    exit 2
+    ;;
+esac
