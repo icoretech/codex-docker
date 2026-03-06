@@ -16,6 +16,20 @@
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s+ARG CODEX_RELEASE_TAG=(?<currentValue>\\S+)"
       ],
       "versioningTemplate": "regex:^rust-v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)README\\.md$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) extractVersion=(?<extractVersion>\\S+)\\s+CODEX_VERSION=(?<currentValue>\\S+)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)examples\\/compose\\.yml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) extractVersion=(?<extractVersion>\\S+)\\s+image: \\$\\{CODEX_IMAGE:-ghcr\\.io\\/icoretech\\/codex-docker:(?<currentValue>[^}]+)\\}"
+      ]
     }
   ],
   "packageRules": [

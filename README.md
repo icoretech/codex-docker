@@ -23,22 +23,27 @@ Image characteristics:
 
 ## 💡 Usage
 
+Set a version once and reuse it in the examples below:
+
+```bash
+# renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>.+)$
+CODEX_VERSION=0.111.0
+```
+
 Pull the image:
 
 ```bash
-docker pull ghcr.io/icoretech/codex-docker:<tag>
+docker pull ghcr.io/icoretech/codex-docker:${CODEX_VERSION}
 ```
-
-Replace `<tag>` with a Codex CLI version such as `0.111.0`.
 
 You can find available tags on the [GitHub Packages page](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker).
 
 The image defaults to plain `codex`, so the caller decides what to run:
 
 ```bash
-docker run --rm -it ghcr.io/icoretech/codex-docker:0.111.0 --help
-docker run --rm -it ghcr.io/icoretech/codex-docker:0.111.0 exec --help
-docker run --rm -i ghcr.io/icoretech/codex-docker:0.111.0 mcp-server
+docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} --help
+docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} exec --help
+docker run --rm -i ghcr.io/icoretech/codex-docker:${CODEX_VERSION} mcp-server
 ```
 
 Persist Codex state across runs by mounting `CODEX_HOME`:
@@ -49,7 +54,7 @@ mkdir -p ./.codex
 docker run --rm -it \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
-  ghcr.io/icoretech/codex-docker:0.111.0
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION}
 ```
 
 Use the helper for login-oriented container flows:
@@ -59,12 +64,12 @@ docker run --rm -it \
   -e OPENAI_API_KEY=sk-... \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
-  ghcr.io/icoretech/codex-docker:0.111.0 codex-bootstrap api-key-login
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap api-key-login
 
 docker run --rm -it \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
-  ghcr.io/icoretech/codex-docker:0.111.0 codex-bootstrap status
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap status
 ```
 
 ## 🧭 Compose Demo

@@ -1,6 +1,7 @@
 name: codex-docker-demo
 
 x-codex-service: &codex-service
+  # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>.+)$
   image: ${CODEX_IMAGE:-ghcr.io/icoretech/codex-docker:0.111.0}
   working_dir: /workspace
   environment:
