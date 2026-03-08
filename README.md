@@ -1,6 +1,5 @@
 # 🤖 Codex CLI Multiarch Docker Image
 
-[![Build](https://github.com/icoretech/codex-docker/actions/workflows/build.yml/badge.svg)](https://github.com/icoretech/codex-docker/actions/workflows/build.yml)
 [![Publish](https://github.com/icoretech/codex-docker/actions/workflows/publish.yml/badge.svg)](https://github.com/icoretech/codex-docker/actions/workflows/publish.yml)
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen?logo=renovatebot)](https://app.renovatebot.com/dashboard#github/icoretech/codex-docker)
 [![GHCR](https://img.shields.io/badge/ghcr-codex--docker-blue?logo=docker)](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker)
@@ -12,6 +11,7 @@ The built AMD64/ARM64 Docker images are published to GHCR with semantic tagging 
 
 The build system pins an upstream Codex release tag in `Dockerfile` via `ARG CODEX_RELEASE_TAG` and downloads the official Linux musl release assets from `openai/codex`.
 Version bumps are managed through Renovate pull requests, and the publish workflow tags the Docker image with the matching Codex CLI version.
+Pull requests run the separate `Build` workflow for image validation and smoke tests before merge.
 
 Image characteristics:
 
