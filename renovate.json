@@ -23,13 +23,6 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) extractVersion=(?<extractVersion>\\S+)\\s+CODEX_VERSION=(?<currentValue>\\S+)"
       ]
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/(^|/)examples\\/compose\\.yml$/"],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) extractVersion=(?<extractVersion>\\S+)\\s+image: \\$\\{CODEX_IMAGE:-ghcr\\.io\\/icoretech\\/codex-docker:(?<currentValue>[^}]+)\\}"
-      ]
     }
   ],
   "packageRules": [
