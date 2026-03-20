@@ -1,7 +1,7 @@
 # 🤖 Codex CLI Multiarch Docker Image
 
 [![Publish](https://github.com/icoretech/codex-docker/actions/workflows/publish.yml/badge.svg)](https://github.com/icoretech/codex-docker/actions/workflows/publish.yml)
-[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen?logo=renovatebot)](https://app.renovatebot.com/dashboard#github/icoretech/codex-docker)
+[![Codex image](https://img.shields.io/github/v/tag/openai/codex?filter=rust-v*&sort=semver&label=codex%20image&logo=docker)](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker)
 [![GHCR](https://img.shields.io/badge/ghcr-codex--docker-blue?logo=docker)](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker)
 
 This repository hosts an automated build system for creating 🐳 Docker images of the official [OpenAI Codex CLI](https://github.com/openai/codex).
