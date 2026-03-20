@@ -2,7 +2,7 @@
 set -eu
 
 IMAGE="${IMAGE:?IMAGE must be set}"
-REPO_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
+REPO_ROOT=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
 DOCKERFILE="${DOCKERFILE:-$REPO_ROOT/Dockerfile}"
 EXPECTED_VERSION="${EXPECTED_VERSION:-}"
 
@@ -23,6 +23,11 @@ echo "==> codex help"
 ROOT_HELP_OUTPUT=$(docker run --rm "$IMAGE" --help 2>&1)
 printf '%s\n' "$ROOT_HELP_OUTPUT"
 printf '%s' "$ROOT_HELP_OUTPUT" | grep -F "Codex CLI" >/dev/null
+
+echo "==> codex login help"
+LOGIN_HELP_OUTPUT=$(docker run --rm "$IMAGE" login --help 2>&1)
+printf '%s\n' "$LOGIN_HELP_OUTPUT"
+printf '%s' "$LOGIN_HELP_OUTPUT" | grep -F -- "--device-auth" >/dev/null
 
 echo "==> codex exec help"
 EXEC_HELP_OUTPUT=$(docker run --rm "$IMAGE" exec --help 2>&1)
