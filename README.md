@@ -18,6 +18,7 @@ Image characteristics:
 - multi-arch: `linux/amd64`, `linux/arm64`
 - default runtime behaves like plain `codex`
 - runs as a non-root user
+- includes `bubblewrap` for Codex Linux sandboxing
 - persistent config/auth/log state lives under `CODEX_HOME`
 - includes an opt-in `codex-bootstrap` helper for login-oriented container flows
 

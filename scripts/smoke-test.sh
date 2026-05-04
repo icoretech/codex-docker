@@ -34,6 +34,11 @@ EXEC_HELP_OUTPUT=$(docker run --rm "$IMAGE" exec --help 2>&1)
 printf '%s\n' "$EXEC_HELP_OUTPUT"
 printf '%s' "$EXEC_HELP_OUTPUT" | grep -F "Run Codex non-interactively" >/dev/null
 
+echo "==> sandbox prerequisites"
+SANDBOX_OUTPUT=$(docker run --rm --entrypoint sh "$IMAGE" -lc 'command -v bwrap && bwrap --version' 2>&1)
+printf '%s\n' "$SANDBOX_OUTPUT"
+printf '%s' "$SANDBOX_OUTPUT" | grep -F "bubblewrap" >/dev/null
+
 echo "==> codex mcp-server help"
 MCP_OUTPUT=$(docker run --rm "$IMAGE" mcp-server --help 2>&1)
 printf '%s\n' "$MCP_OUTPUT"
