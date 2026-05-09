@@ -1,6 +1,7 @@
 .DS_Store
 .act/
 .env
+.sisyphus/
 docs/
 dist/
 tmp/
