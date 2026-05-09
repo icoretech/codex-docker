@@ -47,6 +47,7 @@ The image defaults to plain `codex`, so the caller decides what to run:
 docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} --help
 docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} exec --help
 docker run --rm -i ghcr.io/icoretech/codex-docker:${CODEX_VERSION} mcp-server
+docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} remote-control --help
 ```
 
 Persist Codex state across runs by mounting `CODEX_HOME`:
@@ -75,6 +76,47 @@ docker run --rm -it \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap status
 ```
 
+### Remote control and app-server
+
+Codex CLI 0.130.0 adds `codex remote-control`, an experimental headless
+app-server entrypoint for machines that should be controlled by remote Codex
+clients. In 0.130.0 this command does not publish a local websocket port; it
+starts the app-server with local transports disabled and remote-control support
+enabled for that invocation.
+
+Use it after logging in with ChatGPT/device auth and persisting `CODEX_HOME`:
+
+```bash
+mkdir -p ./.codex
+
+docker run --rm -it \
+  -e CODEX_HOME=/home/codex/.codex \
+  -v "$PWD/.codex:/home/codex/.codex" \
+  -v "$PWD:/workspace" \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} remote-control
+```
+
+For a local websocket app-server that another Codex CLI can attach to, choose an
+explicit port and bind it deliberately. Loopback-only binding is the safest local
+development default:
+
+```bash
+docker run --rm -it \
+  -e CODEX_HOME=/home/codex/.codex \
+  -v "$PWD/.codex:/home/codex/.codex" \
+  -v "$PWD:/workspace" \
+  -p 127.0.0.1:4500:4500 \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} \
+  app-server --listen ws://0.0.0.0:4500
+
+codex --remote ws://127.0.0.1:4500
+```
+
+Do not expose unauthenticated websocket listeners on public interfaces. If you
+need a non-loopback listener, prefer SSH port forwarding, TLS behind a trusted
+proxy, or Codex websocket auth such as `--ws-auth capability-token` with an
+absolute token file path.
+
 ## 🧭 Compose Demo
 
 A runnable Compose demo lives at `examples/compose.yml`. It is meant to show
@@ -85,6 +127,8 @@ Available profiles:
 - `cli`: plain interactive `codex`
 - `exec`: safe `codex exec` demo using `--skip-git-repo-check`, `--ephemeral`, and `-C /workspace`
 - `mcp`: stdio `codex mcp-server`
+- `remote-control`: headless `codex remote-control` with persisted `CODEX_HOME`
+- `app-server-ws`: websocket `codex app-server --listen ws://0.0.0.0:4500` bound to `127.0.0.1:4500` on the host
 - `native-login-api-key`: built-in `codex login --with-api-key`
 - `native-login-device`: built-in `codex login --device-auth`
 - `native-login-status`: built-in `codex login status`
@@ -101,6 +145,12 @@ docker compose -f examples/compose.yml --profile exec run --rm exec
 
 docker compose -f examples/compose.yml --profile mcp run --rm -T mcp mcp-server --help
 
+docker compose -f examples/compose.yml --profile remote-control run --rm remote-control remote-control --help
+
+docker compose -f examples/compose.yml --profile app-server-ws up app-server-ws
+
+codex --remote ws://127.0.0.1:4500
+
 printf '%s\n' "$OPENAI_API_KEY" | \
   docker compose -f examples/compose.yml --profile native-login-api-key run --rm -T native-login-api-key
 
@@ -113,6 +163,8 @@ Notes:
 
 - all profiles share the same named `codex_home` volume, so login state persists across runs
 - `mcp-server` is stdio-only, so use `-T` when you want a clean non-TTY stream; drop `--help` when wiring it to a real MCP client
+- `remote-control` is headless and long-running; it does not open the `4500` websocket port shown by the separate `app-server-ws` profile
+- `app-server-ws` binds container port `4500` to host loopback only; keep that boundary or add websocket auth before exposing it elsewhere
 - `native-login-api-key` reads the key from stdin, while `helper-login-api-key` reads `OPENAI_API_KEY` or `CODEX_OPENAI_API_KEY` from the environment
 - the `exec` profile intentionally demonstrates the common container flags you usually want outside a checked-out Git repo
 - set `CODEX_IMAGE=codex-docker:local` if you want to exercise a locally built image with the same Compose file

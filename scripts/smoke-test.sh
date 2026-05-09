@@ -44,6 +44,17 @@ MCP_OUTPUT=$(docker run --rm "$IMAGE" mcp-server --help 2>&1)
 printf '%s\n' "$MCP_OUTPUT"
 printf '%s' "$MCP_OUTPUT" | grep -F "Start Codex as an MCP server" >/dev/null
 
+echo "==> codex remote-control help"
+REMOTE_CONTROL_OUTPUT=$(docker run --rm "$IMAGE" remote-control --help 2>&1)
+printf '%s\n' "$REMOTE_CONTROL_OUTPUT"
+printf '%s' "$REMOTE_CONTROL_OUTPUT" | grep -F "Start a headless app-server with remote control enabled" >/dev/null
+
+echo "==> codex app-server websocket help"
+APP_SERVER_OUTPUT=$(docker run --rm "$IMAGE" app-server --help 2>&1)
+printf '%s\n' "$APP_SERVER_OUTPUT"
+printf '%s' "$APP_SERVER_OUTPUT" | grep -F "--listen <URL>" >/dev/null
+printf '%s' "$APP_SERVER_OUTPUT" | grep -F "--ws-auth <MODE>" >/dev/null
+
 echo "==> helper help"
 HELP_OUTPUT=$(docker run --rm "$IMAGE" codex-bootstrap help 2>&1)
 printf '%s\n' "$HELP_OUTPUT"

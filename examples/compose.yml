@@ -42,6 +42,24 @@ services:
     command:
       - mcp-server
 
+  remote-control:
+    <<: *interactive-codex-service
+    profiles:
+      - remote-control
+    command:
+      - remote-control
+
+  app-server-ws:
+    <<: *interactive-codex-service
+    profiles:
+      - app-server-ws
+    ports:
+      - 127.0.0.1:4500:4500
+    command:
+      - app-server
+      - --listen
+      - ws://0.0.0.0:4500
+
   native-login-api-key:
     <<: *codex-service
     profiles:
