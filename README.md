@@ -28,7 +28,7 @@ Set a version once and reuse it in the examples below:
 
 ```bash
 # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>.+)$
-CODEX_VERSION=0.133.0
+CODEX_VERSION=0.134.0
 ```
 
 Pull the image:
