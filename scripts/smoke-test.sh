@@ -28,6 +28,7 @@ echo "==> codex login help"
 LOGIN_HELP_OUTPUT=$(docker run --rm "$IMAGE" login --help 2>&1)
 printf '%s\n' "$LOGIN_HELP_OUTPUT"
 printf '%s' "$LOGIN_HELP_OUTPUT" | grep -F -- "--device-auth" >/dev/null
+printf '%s' "$LOGIN_HELP_OUTPUT" | grep -F -- "--with-access-token" >/dev/null
 
 echo "==> codex exec help"
 EXEC_HELP_OUTPUT=$(docker run --rm "$IMAGE" exec --help 2>&1)
@@ -56,8 +57,10 @@ APP_SERVER_OUTPUT=$(docker run --rm "$IMAGE" app-server --help 2>&1)
 printf '%s\n' "$APP_SERVER_OUTPUT"
 printf '%s' "$APP_SERVER_OUTPUT" | grep -F -- "--listen <URL>" >/dev/null
 printf '%s' "$APP_SERVER_OUTPUT" | grep -F -- "--ws-auth <MODE>" >/dev/null
+printf '%s' "$APP_SERVER_OUTPUT" | grep -F -- "--ws-token-sha256 <HEX>" >/dev/null
 
 echo "==> helper help"
 HELP_OUTPUT=$(docker run --rm "$IMAGE" codex-bootstrap help 2>&1)
 printf '%s\n' "$HELP_OUTPUT"
 printf '%s' "$HELP_OUTPUT" | grep -F "Codex container helper" >/dev/null
+printf '%s' "$HELP_OUTPUT" | grep -F "access-token-login" >/dev/null

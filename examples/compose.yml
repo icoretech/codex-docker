@@ -59,6 +59,10 @@ services:
       - app-server
       - --listen
       - ws://0.0.0.0:4500
+      - --ws-auth
+      - capability-token
+      - --ws-token-sha256
+      - a06a3642fee0991ee64f032f46306795f2bdcdb5396d5c887b37b0b120220328
 
   native-login-api-key:
     <<: *codex-service
@@ -68,6 +72,15 @@ services:
     command:
       - login
       - --with-api-key
+
+  native-login-access-token:
+    <<: *codex-service
+    profiles:
+      - native-login-access-token
+    stdin_open: true
+    command:
+      - login
+      - --with-access-token
 
   native-login-device:
     <<: *interactive-codex-service
@@ -96,6 +109,18 @@ services:
     command:
       - codex-bootstrap
       - api-key-login
+
+  helper-login-access-token:
+    <<: *codex-service
+    profiles:
+      - helper-login-access-token
+    stdin_open: true
+    environment:
+      CODEX_HOME: /home/codex/.codex
+      CODEX_ACCESS_TOKEN: ${CODEX_ACCESS_TOKEN:-}
+    command:
+      - codex-bootstrap
+      - access-token-login
 
   helper-login-device:
     <<: *interactive-codex-service
