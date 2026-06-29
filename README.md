@@ -7,6 +7,10 @@
 This repository hosts an automated build system for creating 🐳 Docker images of the official [OpenAI Codex CLI](https://github.com/openai/codex).
 The built AMD64/ARM64 Docker images are published to GHCR with semantic tagging that mirrors the upstream Codex release version.
 
+<p align="center">
+  <img src=".github/assets/github-banner.png" alt="Codex Docker presentation banner" width="1280" />
+</p>
+
 ## 📖 Overview
 
 The build system pins an upstream Codex release tag in `Dockerfile` via `ARG CODEX_RELEASE_TAG` and downloads the official Linux musl release assets from `openai/codex`.
