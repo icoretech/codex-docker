@@ -52,6 +52,11 @@ printf '%s' "$REMOTE_CONTROL_OUTPUT" | grep -F "Usage: codex remote-control" >/d
 printf '%s' "$REMOTE_CONTROL_OUTPUT" | grep -F "start  Start" >/dev/null
 printf '%s' "$REMOTE_CONTROL_OUTPUT" | grep -F "stop   Stop" >/dev/null
 
+echo "==> codex remote-control start help"
+REMOTE_CONTROL_START_OUTPUT=$(docker run --rm "$IMAGE" remote-control start --help 2>&1)
+printf '%s\n' "$REMOTE_CONTROL_START_OUTPUT"
+printf '%s' "$REMOTE_CONTROL_START_OUTPUT" | grep -F "Usage: codex remote-control start" >/dev/null
+
 echo "==> codex app-server websocket help"
 APP_SERVER_OUTPUT=$(docker run --rm "$IMAGE" app-server --help 2>&1)
 printf '%s\n' "$APP_SERVER_OUTPUT"

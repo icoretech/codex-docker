@@ -48,6 +48,7 @@ services:
       - remote-control
     command:
       - remote-control
+      - start
 
   app-server-ws:
     <<: *interactive-codex-service

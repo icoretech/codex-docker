@@ -1,60 +1,46 @@
-# 🤖 Codex CLI Multiarch Docker Image
+# Codex Docker
 
+<!-- markdownlint-disable-next-line MD036 -->
+**OpenAI Codex CLI Docker images for repeatable agent automation.**
+
+[![Build](https://github.com/icoretech/codex-docker/actions/workflows/build.yml/badge.svg)](https://github.com/icoretech/codex-docker/actions/workflows/build.yml)
 [![Publish](https://github.com/icoretech/codex-docker/actions/workflows/publish.yml/badge.svg)](https://github.com/icoretech/codex-docker/actions/workflows/publish.yml)
-[![Codex image](https://img.shields.io/github/v/tag/openai/codex?filter=rust-v*&sort=semver&label=codex%20image&logo=docker)](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker)
+[![Codex image](https://img.shields.io/github/v/tag/openai/codex?filter=rust-v*&sort=semver&label=upstream%20codex&logo=openai)](https://github.com/openai/codex/releases)
 [![GHCR](https://img.shields.io/badge/ghcr-codex--docker-blue?logo=docker)](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker)
+[![Stars](https://img.shields.io/github/stars/icoretech/codex-docker?style=social)](https://github.com/icoretech/codex-docker)
 
-This repository hosts an automated build system for creating 🐳 Docker images of the official [OpenAI Codex CLI](https://github.com/openai/codex).
-The built AMD64/ARM64 Docker images are published to GHCR with semantic tagging that mirrors the upstream Codex release version.
+![Codex Docker presentation banner](.github/assets/github-banner.png)
 
-<p align="center">
-  <img src=".github/assets/github-banner.png" alt="Codex Docker presentation banner" width="1280" />
-</p>
+Run the official [OpenAI Codex CLI](https://github.com/openai/codex)
+without installing it on the host. This repository builds minimal multi-arch
+Docker images from upstream Linux musl release assets, verifies the downloaded
+archive digest, and publishes matching tags to GHCR for `linux/amd64` and
+`linux/arm64`.
 
-## 📖 Overview
+If this saves you from rebuilding Codex containers by hand,
+[star the repo](https://github.com/icoretech/codex-docker) so other
+agent-infra users can find it.
 
-The build system pins an upstream Codex release tag in `Dockerfile` via `ARG CODEX_RELEASE_TAG` and downloads the official Linux musl release assets from `openai/codex`.
-Version bumps are managed through Renovate pull requests, and the publish workflow tags the Docker image with the matching Codex CLI version.
-Pull requests run the separate `Build` workflow for image validation and smoke tests before merge.
+## Quick Start
 
-Image characteristics:
+Prerequisites: Docker, and an OpenAI/Codex auth method when running commands
+that call the model.
 
-- multi-arch: `linux/amd64`, `linux/arm64`
-- default runtime behaves like plain `codex`
-- runs as a non-root user
-- includes `bubblewrap` for Codex Linux sandboxing
-- persistent config/auth/log state lives under `CODEX_HOME`
-- includes an opt-in `codex-bootstrap` helper for login-oriented container flows
-
-## 💡 Usage
-
-Set a version once and reuse it in the examples below:
+Set the image version once:
 
 ```bash
 # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>.+)$
 CODEX_VERSION=0.142.3
 ```
 
-Pull the image:
+Pull and run Codex:
 
 ```bash
 docker pull ghcr.io/icoretech/codex-docker:${CODEX_VERSION}
-docker pull ghcr.io/icoretech/codex-docker:latest
-```
-
-You can find available tags on the [GitHub Packages page](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker).
-Use `${CODEX_VERSION}` for reproducible deployments and `latest` as a convenience tag for quick trials.
-
-The image defaults to plain `codex`, so the caller decides what to run:
-
-```bash
 docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} --help
-docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} exec --help
-docker run --rm -i ghcr.io/icoretech/codex-docker:${CODEX_VERSION} mcp-server
-docker run --rm -it ghcr.io/icoretech/codex-docker:${CODEX_VERSION} remote-control --help
 ```
 
-Persist Codex state across runs by mounting `CODEX_HOME`:
+Persist Codex config, auth, and logs across runs:
 
 ```bash
 mkdir -p ./.codex
@@ -62,23 +48,103 @@ mkdir -p ./.codex
 docker run --rm -it \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
+  -v "$PWD:/workspace" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION}
 ```
 
-Use the helper for login-oriented container flows:
+Use `latest` only for quick trials. Pin `${CODEX_VERSION}` for CI, runners, and
+reproducible agent workflows.
+
+## Why This Image
+
+- **No host install**: run Codex from Docker on workstations, CI jobs, and
+  remote runners.
+- **Version-matched tags**: image tags mirror upstream Codex CLI releases, with
+  `latest` as a convenience tag.
+- **Multi-arch by default**: the publish workflow pushes `linux/amd64` and
+  `linux/arm64` images to GHCR.
+- **Sandbox-ready base**: the runtime image includes `bubblewrap`, `git`,
+  `openssh-client`, and `ripgrep`.
+- **Non-root runtime**: commands run as the `codex` user inside `/workspace`.
+- **Agent-facing entry points**: use the same image for `codex`, `codex exec`,
+  `mcp-server`, `remote-control start`, and websocket `app-server`.
+- **Container auth helpers**: `codex-bootstrap` supports file-backed API-key,
+  access-token, and device-auth login flows.
+
+## Common Commands
+
+Run an interactive CLI session:
 
 ```bash
 docker run --rm -it \
-  -e OPENAI_API_KEY=sk-... \
+  -e CODEX_HOME=/home/codex/.codex \
+  -v "$PWD/.codex:/home/codex/.codex" \
+  -v "$PWD:/workspace" \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION}
+```
+
+Run a one-shot `codex exec` command against the current directory:
+
+```bash
+docker run --rm -it \
+  -e CODEX_HOME=/home/codex/.codex \
+  -v "$PWD/.codex:/home/codex/.codex" \
+  -v "$PWD:/workspace" \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} \
+  exec --skip-git-repo-check --ephemeral -C /workspace "summarize this workspace"
+```
+
+Start the stdio MCP server:
+
+```bash
+docker run --rm -i \
+  -e CODEX_HOME=/home/codex/.codex \
+  -v "$PWD/.codex:/home/codex/.codex" \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} mcp-server
+```
+
+Check the available container helper commands:
+
+```bash
+docker run --rm -it \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap help
+```
+
+Available tags are listed on the
+[GitHub Packages page](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker).
+
+## Login Helpers
+
+The image defaults to Codex's native CLI. Use `codex-bootstrap` when a container
+login flow should force Codex auth state into mounted `CODEX_HOME` files.
+
+API key login:
+
+```bash
+docker run --rm -it \
+  -e OPENAI_API_KEY="$OPENAI_API_KEY" \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap api-key-login
+```
 
+Codex access token login:
+
+```bash
 docker run --rm -it \
-  -e CODEX_ACCESS_TOKEN=at-... \
+  -e CODEX_ACCESS_TOKEN="$CODEX_ACCESS_TOKEN" \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap access-token-login
+```
+
+Device auth and status:
+
+```bash
+docker run --rm -it \
+  -e CODEX_HOME=/home/codex/.codex \
+  -v "$PWD/.codex:/home/codex/.codex" \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap device-auth
 
 docker run --rm -it \
   -e CODEX_HOME=/home/codex/.codex \
@@ -91,25 +157,57 @@ ephemerally without writing auth state:
 
 ```bash
 docker run --rm -it \
-  -e CODEX_ACCESS_TOKEN=at-... \
+  -e CODEX_ACCESS_TOKEN="$CODEX_ACCESS_TOKEN" \
   -v "$PWD:/workspace" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} \
   exec --skip-git-repo-check --ephemeral -C /workspace "summarize this workspace"
 ```
 
-Use Platform API keys for general API-backed automation. Use Codex access
-tokens when a trusted script or private runner needs ChatGPT workspace identity,
+Use Platform API keys for general API-backed automation. Use Codex access tokens
+only when a trusted private runner needs ChatGPT workspace identity,
 ChatGPT-managed Codex entitlements, or enterprise workspace controls.
 
-### Remote control and app-server
+## Compose Demo
 
-`codex remote-control` starts Codex's headless app-server path with remote
-control enabled for remote Codex clients. The foreground command uses a private
-local Unix socket internally; it does not publish the `4500` websocket port shown
-by the separate app-server example below.
+`examples/compose.yml` demonstrates the supported invocation modes with one
+shared `codex_home` volume.
 
-Use it after logging in with ChatGPT, device auth, or a Codex access token and
-persisting `CODEX_HOME`:
+- `cli`: interactive `codex` for manual local sessions.
+- `exec`: one-shot automation with `codex exec`, `--skip-git-repo-check`,
+  `--ephemeral`, and `-C /workspace`.
+- `mcp`: stdio `codex mcp-server` for MCP clients.
+- `remote-control`: headless `codex remote-control start`.
+- `app-server-ws`: authenticated websocket `codex app-server` for local
+  websocket client testing.
+- `native-login-*`: built-in `codex login` flows.
+- `helper-*`: file-backed `codex-bootstrap` auth flows.
+
+Run the demo image from GHCR:
+
+```bash
+docker compose -f examples/compose.yml --profile cli run --rm cli
+docker compose -f examples/compose.yml --profile exec run --rm exec
+docker compose -f examples/compose.yml \
+  --profile mcp run --rm -T mcp mcp-server --help
+```
+
+Exercise a locally built image with the same Compose file:
+
+```bash
+docker build -t codex-docker:local .
+CODEX_IMAGE=codex-docker:local \
+  docker compose -f examples/compose.yml --profile exec run --rm exec
+```
+
+`examples/workspace/` is bind-mounted as `/workspace`; put a real repository
+there before replacing the demo `exec --help` command with an actual prompt.
+
+## Remote Control and Websocket App Server
+
+`codex remote-control start` starts Codex's headless app-server path for remote
+Codex clients. The foreground command uses a private local Unix socket
+internally; it does not publish the `4500` websocket port shown by the separate
+app-server example.
 
 ```bash
 mkdir -p ./.codex
@@ -118,14 +216,11 @@ docker run --rm -it \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
   -v "$PWD:/workspace" \
-  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} remote-control
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} remote-control start
 ```
 
-For a local websocket app-server that another Codex CLI can attach to, choose an
-explicit port and bind it deliberately. Loopback-only binding is the safest local
-development default. Because the container listens on `0.0.0.0`, current Codex
-requires websocket auth even when Docker publishes the port only on host
-loopback:
+For a local websocket app-server that another Codex CLI can attach to, bind
+deliberately and require websocket auth:
 
 ```bash
 CODEX_REMOTE_AUTH_TOKEN=codex-local-dev-token
@@ -145,83 +240,93 @@ CODEX_REMOTE_AUTH_TOKEN="$CODEX_REMOTE_AUTH_TOKEN" \
   --remote-auth-token-env CODEX_REMOTE_AUTH_TOKEN
 ```
 
-Do not expose unauthenticated websocket listeners on public interfaces. For real
+Do not expose unauthenticated websocket listeners on public interfaces. For
 shared or non-loopback listeners, prefer SSH port forwarding, TLS behind a
-trusted proxy, or Codex websocket auth with a secret-backed
-`--ws-token-file`/`--ws-token-sha256` or signed bearer tokens.
+trusted proxy, or Codex websocket auth with secret-backed `--ws-token-file`,
+`--ws-token-sha256`, or signed bearer tokens.
 
-## 🧭 Compose Demo
+## AI Agent and MCP Integration
 
-A runnable Compose demo lives at `examples/compose.yml`. It is meant to show
-real invocation patterns, not just a YAML skeleton.
+Use the image anywhere an agent or MCP client can invoke a local command.
 
-Available profiles:
+Example MCP server configuration:
 
-- `cli`: plain interactive `codex`
-- `exec`: safe `codex exec` demo using `--skip-git-repo-check`, `--ephemeral`, and `-C /workspace`
-- `mcp`: stdio `codex mcp-server`
-- `remote-control`: headless `codex remote-control` with persisted `CODEX_HOME`
-- `app-server-ws`: authenticated websocket `codex app-server --listen ws://0.0.0.0:4500` bound to `127.0.0.1:4500` on the host
-- `native-login-api-key`: built-in `codex login --with-api-key`
-- `native-login-access-token`: built-in `codex login --with-access-token`
-- `native-login-device`: built-in `codex login --device-auth`
-- `native-login-status`: built-in `codex login status`
-- `helper-login-api-key`: `codex-bootstrap api-key-login`
-- `helper-login-access-token`: `codex-bootstrap access-token-login`
-- `helper-login-device`: `codex-bootstrap device-auth`
-- `helper-status`: `codex-bootstrap status`
-
-Basic examples:
-
-```bash
-docker compose -f examples/compose.yml --profile cli run --rm cli
-
-docker compose -f examples/compose.yml --profile exec run --rm exec
-
-docker compose -f examples/compose.yml --profile mcp run --rm -T mcp mcp-server --help
-
-docker compose -f examples/compose.yml --profile remote-control run --rm remote-control remote-control --help
-
-docker compose -f examples/compose.yml --profile app-server-ws up app-server-ws
-
-CODEX_REMOTE_AUTH_TOKEN=codex-local-dev-token \
-  codex --remote ws://127.0.0.1:4500 \
-  --remote-auth-token-env CODEX_REMOTE_AUTH_TOKEN
-
-printf '%s\n' "$OPENAI_API_KEY" | \
-  docker compose -f examples/compose.yml --profile native-login-api-key run --rm -T native-login-api-key
-
-printf '%s\n' "$CODEX_ACCESS_TOKEN" | \
-  docker compose -f examples/compose.yml --profile native-login-access-token run --rm -T native-login-access-token
-
-docker compose -f examples/compose.yml --profile native-login-device run --rm native-login-device
-
-docker compose -f examples/compose.yml --profile helper-login-api-key run --rm helper-login-api-key
-
-docker compose -f examples/compose.yml --profile helper-login-access-token run --rm helper-login-access-token
+```json
+{
+  "mcpServers": {
+    "codex": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "CODEX_HOME=/home/codex/.codex",
+        "-v",
+        "codex_home:/home/codex/.codex",
+        "ghcr.io/icoretech/codex-docker:latest",
+        "mcp-server"
+      ]
+    }
+  }
+}
 ```
 
-Notes:
+For pinned agent runners, replace `latest` with the version from
+[Quick Start](#quick-start). For workflows that need repository context, add a
+bind mount for the target workspace and pass `-C /workspace` to `codex exec`.
 
-- all profiles share the same named `codex_home` volume, so login state persists across runs
-- `mcp-server` is stdio-only, so use `-T` when you want a clean non-TTY stream; drop `--help` when wiring it to a real MCP client
-- `remote-control` is headless and long-running; it does not open the `4500` websocket port shown by the separate `app-server-ws` profile
-- `app-server-ws` binds container port `4500` to host loopback only and uses the demo capability token `codex-local-dev-token`; replace it with a real secret for anything shared
-- `native-login-api-key` and `native-login-access-token` read secrets from stdin
-- `helper-login-api-key` reads `OPENAI_API_KEY` or `CODEX_OPENAI_API_KEY` from the environment, while `helper-login-access-token` reads `CODEX_ACCESS_TOKEN`
-- the `exec` profile intentionally demonstrates the common container flags you usually want outside a checked-out Git repo
-- set `CODEX_IMAGE=codex-docker:local` if you want to exercise a locally built image with the same Compose file
-- `examples/workspace/` is bind-mounted as `/workspace`; put a real repo there before replacing the demo `exec --help` with an actual prompt
+## Local Verification
 
-## 🧪 Local Verification
+Build and smoke-test the image:
 
 ```bash
 docker build -t codex-docker:local .
 IMAGE=codex-docker:local ./scripts/smoke-test.sh
+```
+
+Run the GitHub Actions build workflow locally with `act`:
+
+```bash
 act pull_request --container-architecture linux/amd64 -W .github/workflows/build.yml
 ```
 
-## 📄 License
+The smoke test checks:
 
-The Docker image packaging in this repository is provided as project automation around the upstream Codex CLI.
-Please review the upstream [OpenAI Codex repository](https://github.com/openai/codex) and its license/terms before redistributing or deploying the packaged software.
+- `codex --version` matches `ARG CODEX_RELEASE_TAG`
+- core help output renders
+- login help includes API key, access token, and device auth flows
+- `exec`, `mcp-server`, `remote-control start`, and `app-server` help paths
+  respond
+- `bubblewrap` is available for Codex Linux sandboxing
+- `codex-bootstrap help` exposes the container helper commands
+
+## Contributing
+
+Open pull requests against `main`.
+Keep version bumps aligned with Renovate's Dockerfile and README markers, and
+run the local verification commands before merging behavior changes.
+
+## Support
+
+- **Image packaging issues**: open an issue in
+  [icoretech/codex-docker](https://github.com/icoretech/codex-docker/issues).
+- **Codex CLI behavior**: check the upstream
+  [openai/codex](https://github.com/openai/codex) repository.
+- **Published images**: inspect tags on the
+  [GHCR package page](https://github.com/icoretech/codex-docker/pkgs/container/codex-docker).
+
+## License
+
+This repository packages upstream OpenAI Codex CLI release assets into Docker
+images. No repository license metadata is currently published here; review the
+upstream [OpenAI Codex repository](https://github.com/openai/codex) and its
+license or terms before redistributing, mirroring, or deploying the packaged
+software.
+
+## Star History
+
+[![Star History Chart][star-history-badge]][star-history-link]
+
+[star-history-badge]: https://api.star-history.com/svg?repos=icoretech/codex-docker&type=Date
+[star-history-link]: https://star-history.com/#icoretech/codex-docker&Date
