@@ -2,16 +2,6 @@ name: Build
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-    paths:
-      - Dockerfile
-      - scripts/**
-      - renovate.json
-      - .github/workflows/build.yml
-      - .github/workflows/publish.yml
   workflow_dispatch:
 
 jobs:

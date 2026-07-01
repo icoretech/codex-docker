@@ -31,7 +31,8 @@
       "matchManagers": ["custom.regex"],
       "matchUpdateTypes": ["major", "minor", "patch", "pin", "digest", "rollback", "replacement"],
       "automerge": true,
-      "automergeType": "pr"
+      "automergeType": "pr",
+      "platformAutomerge": true
     }
   ]
 }
