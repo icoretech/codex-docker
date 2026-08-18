@@ -39,6 +39,9 @@ echo "==> sandbox prerequisites"
 SANDBOX_OUTPUT=$(docker run --rm --entrypoint sh "$IMAGE" -lc 'command -v bwrap && bwrap --version' 2>&1)
 printf '%s\n' "$SANDBOX_OUTPUT"
 printf '%s' "$SANDBOX_OUTPUT" | grep -F "bubblewrap" >/dev/null
+echo "==> Code Mode host"
+CODE_MODE_HOST_OUTPUT=$(docker run --rm --entrypoint sh "$IMAGE" -lc 'test -x /usr/local/bin/codex-code-mode-host && test "$(command -v codex-code-mode-host)" = /usr/local/bin/codex-code-mode-host && codex-code-mode-host --help' 2>&1)
+printf '%s\n' "$CODE_MODE_HOST_OUTPUT"
 
 echo "==> codex mcp-server help"
 MCP_OUTPUT=$(docker run --rm "$IMAGE" mcp-server --help 2>&1)

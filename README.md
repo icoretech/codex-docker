@@ -68,8 +68,34 @@ reproducible agent workflows.
 - **Non-root runtime**: commands run as the `codex` user inside `/workspace`.
 - **Agent-facing entry points**: use the same image for `codex`, `codex exec`,
   `mcp-server`, `remote-control start`, and websocket `app-server`.
+- **Code Mode host**: both published Linux architectures bundle the matching
+  upstream `codex-code-mode-host` executable. Code Mode is selected by the
+  upstream Codex client and model configuration, not by a Docker-specific
+  command.
 - **Container auth helpers**: `codex-bootstrap` supports file-backed API-key,
   access-token, and device-auth login flows.
+
+## Code Mode
+
+The image bundles the `codex-code-mode-host` executable matching the pinned
+`${CODEX_VERSION}` release for both `linux/amd64` and `linux/arm64`. Use the
+same pinned image invocation as a normal Codex session:
+
+```bash
+docker run --rm -it \
+  -e CODEX_HOME=/home/codex/.codex \
+  -v "$PWD/.codex:/home/codex/.codex" \
+  -v "$PWD:/workspace" \
+  ghcr.io/icoretech/codex-docker:${CODEX_VERSION}
+```
+
+The upstream Codex client and model configuration select Code Mode; the image
+does not require a Docker-specific Code Mode command. The container-local host
+executes the Code Mode runtime. If the Codex client is configured to use a
+Pooler, its model Responses traffic may travel through Pooler while the local
+host still executes Code Mode; Pooler does not provide or spawn this binary.
+Code Mode availability remains subject to the selected model and account
+features.
 
 ## Common Commands
 
@@ -299,6 +325,8 @@ The smoke test checks:
 - `exec`, `mcp-server`, `remote-control start`, and `app-server` help paths
   respond
 - `bubblewrap` is available for Codex Linux sandboxing
+- `codex-code-mode-host` is installed, executable, resolves on `PATH`, and
+  responds to `--help`
 - `codex-bootstrap help` exposes the container helper commands
 
 ## Contributing
