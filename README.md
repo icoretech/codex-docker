@@ -30,7 +30,7 @@ Set the image version once:
 
 ```bash
 # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>.+)$
-CODEX_VERSION=0.153.0
+CODEX_VERSION=0.153.2
 ```
 
 Pull and run Codex:
