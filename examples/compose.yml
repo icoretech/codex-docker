@@ -34,14 +34,6 @@ services:
       - /workspace
       - --help
 
-  mcp:
-    <<: *codex-service
-    profiles:
-      - mcp
-    stdin_open: true
-    command:
-      - mcp-server
-
   remote-control:
     <<: *interactive-codex-service
     profiles:

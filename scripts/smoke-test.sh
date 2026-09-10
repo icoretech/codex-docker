@@ -43,10 +43,10 @@ echo "==> Code Mode host"
 CODE_MODE_HOST_OUTPUT=$(docker run --rm --entrypoint sh "$IMAGE" -lc 'test -x /usr/local/bin/codex-code-mode-host && test "$(command -v codex-code-mode-host)" = /usr/local/bin/codex-code-mode-host && codex-code-mode-host --help' 2>&1)
 printf '%s\n' "$CODE_MODE_HOST_OUTPUT"
 
-echo "==> codex mcp-server help"
-MCP_OUTPUT=$(docker run --rm "$IMAGE" mcp-server --help 2>&1)
+echo "==> codex mcp help"
+MCP_OUTPUT=$(docker run --rm "$IMAGE" mcp --help 2>&1)
 printf '%s\n' "$MCP_OUTPUT"
-printf '%s' "$MCP_OUTPUT" | grep -F "Start Codex as an MCP server" >/dev/null
+printf '%s' "$MCP_OUTPUT" | grep -F "Manage external MCP servers" >/dev/null
 
 echo "==> codex remote-control help"
 REMOTE_CONTROL_OUTPUT=$(docker run --rm "$IMAGE" remote-control --help 2>&1)

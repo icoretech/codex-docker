@@ -67,7 +67,7 @@ reproducible agent workflows.
   `openssh-client`, and `ripgrep`.
 - **Non-root runtime**: commands run as the `codex` user inside `/workspace`.
 - **Agent-facing entry points**: use the same image for `codex`, `codex exec`,
-  `mcp-server`, `remote-control start`, and websocket `app-server`.
+  `remote-control start`, and websocket `app-server`.
 - **Code Mode host**: both published Linux architectures bundle the matching
   upstream `codex-code-mode-host` executable. Code Mode is selected by the
   upstream Codex client and model configuration, not by a Docker-specific
@@ -118,15 +118,6 @@ docker run --rm -it \
   -v "$PWD:/workspace" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} \
   exec --skip-git-repo-check --ephemeral -C /workspace "summarize this workspace"
-```
-
-Start the stdio MCP server:
-
-```bash
-docker run --rm -i \
-  -e CODEX_HOME=/home/codex/.codex \
-  -v "$PWD/.codex:/home/codex/.codex" \
-  ghcr.io/icoretech/codex-docker:${CODEX_VERSION} mcp-server
 ```
 
 Check the available container helper commands:
@@ -201,7 +192,6 @@ shared `codex_home` volume.
 - `cli`: interactive `codex` for manual local sessions.
 - `exec`: one-shot automation with `codex exec`, `--skip-git-repo-check`,
   `--ephemeral`, and `-C /workspace`.
-- `mcp`: stdio `codex mcp-server` for MCP clients.
 - `remote-control`: headless `codex remote-control start`.
 - `app-server-ws`: authenticated websocket `codex app-server` for local
   websocket client testing.
@@ -214,7 +204,7 @@ Run the demo image from GHCR:
 docker compose -f examples/compose.yml --profile cli run --rm cli
 docker compose -f examples/compose.yml --profile exec run --rm exec
 docker compose -f examples/compose.yml \
-  --profile mcp run --rm -T mcp mcp-server --help
+  --profile app-server-ws run --rm app-server-ws --help
 ```
 
 Exercise a locally built image with the same Compose file:
@@ -273,30 +263,10 @@ trusted proxy, or Codex websocket auth with secret-backed `--ws-token-file`,
 
 ## AI Agent and MCP Integration
 
-Use the image anywhere an agent or MCP client can invoke a local command.
-
-Example MCP server configuration:
-
-```json
-{
-  "mcpServers": {
-    "codex": {
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-e",
-        "CODEX_HOME=/home/codex/.codex",
-        "-v",
-        "codex_home:/home/codex/.codex",
-        "ghcr.io/icoretech/codex-docker:latest",
-        "mcp-server"
-      ]
-    }
-  }
-}
-```
+Use the image anywhere an agent can invoke a local command. Codex 0.154.0
+removed the stdio `codex mcp-server` mode; use the websocket `app-server`
+profile for programmatic clients, and `codex mcp` to manage the external MCP
+servers Codex itself connects to.
 
 For pinned agent runners, replace `latest` with the version from
 [Quick Start](#quick-start). For workflows that need repository context, add a
@@ -322,8 +292,8 @@ The smoke test checks:
 - `codex --version` matches `ARG CODEX_RELEASE_TAG`
 - core help output renders
 - login help includes API key, access token, and device auth flows
-- `exec`, `mcp-server`, `remote-control start`, and `app-server` help paths
-  respond
+- `exec`, `mcp` (external MCP server management), `remote-control start`, and
+  `app-server` help paths respond
 - `bubblewrap` is available for Codex Linux sandboxing
 - `codex-code-mode-host` is installed, executable, resolves on `PATH`, and
   responds to `--help`
