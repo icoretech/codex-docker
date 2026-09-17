@@ -1,4 +1,4 @@
-FROM alpine:3.23.3 AS downloader
+FROM alpine:3.24.1 AS downloader
 
 ARG TARGETARCH
 # renovate: datasource=github-releases depName=openai/codex versioning=regex:^rust-v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$
@@ -42,7 +42,7 @@ RUN case "${TARGETARCH:-}" in \
  && mv "/tmp/${host_binary}" /tmp/codex-code-mode-host \
  && chmod +x /tmp/codex-code-mode-host
 
-FROM alpine:3.23.3
+FROM alpine:3.24.1
 
 RUN apk add --no-cache \
     bash \
