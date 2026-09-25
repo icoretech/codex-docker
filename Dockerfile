@@ -2,7 +2,7 @@ FROM alpine:3.24.1 AS downloader
 
 ARG TARGETARCH
 # renovate: datasource=github-releases depName=openai/codex versioning=regex:^rust-v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$
-ARG CODEX_RELEASE_TAG=rust-v0.156.1
+ARG CODEX_RELEASE_TAG=rust-v0.157.0
 
 RUN apk add --no-cache ca-certificates curl jq tar
 
