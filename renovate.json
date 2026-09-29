@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabledManagers": ["custom.regex"],
+  "enabledManagers": ["github-actions", "custom.regex"],
   "dependencyDashboard": true,
   "labels": ["dependencies"],
   "platformAutomerge": false,
@@ -26,6 +26,12 @@
     }
   ],
   "packageRules": [
+    {
+      "description": "Group GitHub Actions runtime updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "groupSlug": "github-actions"
+    },
     {
       "description": "Automerge Codex release tag updates",
       "matchManagers": ["custom.regex"],

@@ -287,6 +287,8 @@ Run the GitHub Actions build workflow locally with `act`:
 act pull_request --container-architecture linux/amd64 -W .github/workflows/build.yml
 ```
 
+The build and publish workflows use `ubuntu-24.04` explicitly and Node.js 24 Docker actions. Renovate tracks their versions alongside the Codex release pins.
+
 The smoke test checks:
 
 - `codex --version` matches `ARG CODEX_RELEASE_TAG`
