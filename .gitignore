@@ -2,6 +2,7 @@
 .act/
 .env
 .sisyphus/
+.omo/
 docs/
 dist/
 tmp/
