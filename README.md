@@ -135,11 +135,14 @@ Available tags are listed on the
 The image defaults to Codex's native CLI. Use `codex-bootstrap` when a container
 login flow should force Codex auth state into mounted `CODEX_HOME` files.
 
+Export the credential variable in your shell before running these commands.
+Passing its name with `-e` keeps the value out of Docker's command-line arguments.
+
 API key login:
 
 ```bash
 docker run --rm -it \
-  -e OPENAI_API_KEY="$OPENAI_API_KEY" \
+  -e OPENAI_API_KEY \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap api-key-login
@@ -149,7 +152,7 @@ Codex access token login:
 
 ```bash
 docker run --rm -it \
-  -e CODEX_ACCESS_TOKEN="$CODEX_ACCESS_TOKEN" \
+  -e CODEX_ACCESS_TOKEN \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} codex-bootstrap access-token-login
@@ -174,7 +177,7 @@ ephemerally without writing auth state:
 
 ```bash
 docker run --rm -it \
-  -e CODEX_ACCESS_TOKEN="$CODEX_ACCESS_TOKEN" \
+  -e CODEX_ACCESS_TOKEN \
   -v "$PWD:/workspace" \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} \
   exec --skip-git-repo-check --ephemeral -C /workspace "summarize this workspace"
