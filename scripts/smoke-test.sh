@@ -3,6 +3,7 @@ set -eu
 
 IMAGE="${IMAGE:?IMAGE must be set}"
 REPO_ROOT=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
+sh "$REPO_ROOT/scripts/test-websocket-token.sh"
 DOCKERFILE="${DOCKERFILE:-$REPO_ROOT/Dockerfile}"
 EXPECTED_VERSION="${EXPECTED_VERSION:-}"
 

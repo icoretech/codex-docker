@@ -55,7 +55,7 @@ services:
       - --ws-auth
       - capability-token
       - --ws-token-sha256
-      - a06a3642fee0991ee64f032f46306795f2bdcdb5396d5c887b37b0b120220328
+      - "${CODEX_WS_TOKEN_SHA256:-}"
 
   native-login-api-key:
     <<: *codex-service

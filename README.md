@@ -238,12 +238,22 @@ docker run --rm -it \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} remote-control start
 ```
 
-For a local websocket app-server that another Codex CLI can attach to, bind
-deliberately and require websocket auth:
+For a local websocket app-server, generate a separate private credential for each
+installation. From this repository checkout, choose a new directory beneath an
+existing private parent; the generator refuses to overwrite any existing path:
 
 ```bash
-CODEX_REMOTE_AUTH_TOKEN=codex-local-dev-token
+CODEX_WS_CREDENTIAL_DIR="$HOME/.codex-websocket"
+sh scripts/generate-websocket-token.sh "$CODEX_WS_CREDENTIAL_DIR"
+export CODEX_WS_TOKEN_SHA256
+CODEX_WS_TOKEN_SHA256=$(cat "$CODEX_WS_CREDENTIAL_DIR/token.sha256")
+```
 
+The generator requires OpenSSL, creates a mode-0700 directory with mode-0600 files,
+and prints no credential. Keep the generated files private and reuse them for the
+matching server and client. The server receives only the derived digest:
+
+```bash
 docker run --rm -it \
   -e CODEX_HOME=/home/codex/.codex \
   -v "$PWD/.codex:/home/codex/.codex" \
@@ -252,12 +262,34 @@ docker run --rm -it \
   ghcr.io/icoretech/codex-docker:${CODEX_VERSION} \
   app-server --listen ws://0.0.0.0:4500 \
   --ws-auth capability-token \
-  --ws-token-sha256 a06a3642fee0991ee64f032f46306795f2bdcdb5396d5c887b37b0b120220328
-
-CODEX_REMOTE_AUTH_TOKEN="$CODEX_REMOTE_AUTH_TOKEN" \
-  codex --remote ws://127.0.0.1:4500 \
-  --remote-auth-token-env CODEX_REMOTE_AUTH_TOKEN
+  --ws-token-sha256 "${CODEX_WS_TOKEN_SHA256:-}"
 ```
+
+Alternatively, use the same exported digest with Compose:
+
+```bash
+CODEX_IMAGE="ghcr.io/icoretech/codex-docker:${CODEX_VERSION}" \
+  docker compose -f examples/compose.yml --profile app-server-ws up app-server-ws
+```
+
+An absent, empty or malformed digest refuses websocket startup. Other Compose
+profiles do not require websocket credentials. The host port remains loopback-only;
+the wildcard listener inside the container does not publish a public host port.
+
+In a second terminal, read the same installation token into the client environment:
+
+```bash
+CODEX_WS_CREDENTIAL_DIR="$HOME/.codex-websocket"
+export CODEX_REMOTE_AUTH_TOKEN
+CODEX_REMOTE_AUTH_TOKEN=$(cat "$CODEX_WS_CREDENTIAL_DIR/token")
+codex --remote ws://127.0.0.1:4500 \
+  --remote-auth-token-env CODEX_REMOTE_AUTH_TOKEN
+unset CODEX_REMOTE_AUTH_TOKEN
+```
+
+Keep the raw token in the private file or environment; do not put it in command-line
+arguments or share it. To rotate it, generate a new directory and restart the server
+with the new digest before connecting with its matching token.
 
 Do not expose unauthenticated websocket listeners on public interfaces. For
 shared or non-loopback listeners, prefer SSH port forwarding, TLS behind a
