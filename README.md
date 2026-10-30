@@ -14,7 +14,8 @@
 Run the official [OpenAI Codex CLI](https://github.com/openai/codex)
 without installing it on the host. This repository builds minimal multi-arch
 Docker images from upstream Linux musl release assets, verifies the downloaded
-archive digest, and publishes matching tags to GHCR for `linux/amd64` and
+package archive digest, retains its executors and runtime resources, and publishes
+matching tags to GHCR for `linux/amd64` and
 `linux/arm64`.
 
 If this saves you from rebuilding Codex containers by hand,
@@ -30,7 +31,7 @@ Set the image version once:
 
 ```bash
 # renovate: datasource=github-releases depName=openai/codex extractVersion=^rust-v(?<version>.+)$
-CODEX_VERSION=0.165.0
+CODEX_VERSION=0.166.0
 ```
 
 Pull and run Codex:
@@ -63,23 +64,27 @@ reproducible agent workflows.
   `latest` as a convenience tag.
 - **Multi-arch by default**: the publish workflow pushes `linux/amd64` and
   `linux/arm64` images to GHCR.
-- **Sandbox-ready base**: the runtime image includes `bubblewrap`, `git`,
+- **Sandbox-ready base**: the Debian runtime image includes `bubblewrap`, `git`,
   `openssh-client`, and `ripgrep`.
 - **Non-root runtime**: commands run as the `codex` user inside `/workspace`.
 - **Agent-facing entry points**: use the same image for `codex`, `codex exec`,
   `remote-control start`, and websocket `app-server`.
-- **Code Mode host**: both published Linux architectures bundle the matching
-  upstream `codex-code-mode-host` executable. Code Mode is selected by the
-  upstream Codex client and model configuration, not by a Docker-specific
-  command.
+- **Packaged executors**: both published Linux architectures retain the matching
+  upstream `codex-code-mode-host`, `codex-exec-server`, package manifest and
+  runtime resources. Code Mode is selected by the upstream Codex client and
+  model configuration, not by a Docker-specific command.
 - **Container auth helpers**: `codex-bootstrap` supports file-backed API-key,
   access-token, and device-auth login flows.
 
 ## Code Mode
 
-The image bundles the `codex-code-mode-host` executable matching the pinned
-`${CODEX_VERSION}` release for both `linux/amd64` and `linux/arm64`. Use the
-same pinned image invocation as a normal Codex session:
+The image keeps the complete official package under `/opt/codex`, preserving
+its relative executor and resource paths. `codex`, `codex-code-mode-host` and
+`codex-exec-server` are exposed in `PATH` through symlinks to that package.
+The glibc runtime supports the GNU-linked helpers included in the upstream
+Linux package. All bundled executables match the pinned `${CODEX_VERSION}` release for both
+`linux/amd64` and `linux/arm64`. Use the same pinned image invocation as a
+normal Codex session:
 
 ```bash
 docker run --rm -it \
