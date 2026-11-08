@@ -1,4 +1,4 @@
-FROM alpine:3.24.1 AS downloader
+FROM alpine:3.24.4 AS downloader
 
 ARG TARGETARCH
 # renovate: datasource=github-releases depName=openai/codex versioning=regex:^rust-v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$

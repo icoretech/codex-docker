@@ -76,6 +76,8 @@ reproducible agent workflows.
 - **Container auth helpers**: `codex-bootstrap` supports file-backed API-key,
   access-token, and device-auth login flows.
 
+The downloader stage uses Alpine 3.24.4; the runtime uses Debian 13.7 slim.
+
 ## Code Mode
 
 The image keeps the complete official package under `/opt/codex`, preserving
