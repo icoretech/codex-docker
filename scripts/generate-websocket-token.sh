@@ -16,6 +16,13 @@ if ! mkdir -m 700 "$destination" 2>/dev/null; then
   echo "Credential directory must not already exist and its parent must exist" >&2
   exit 1
 fi
+# mkdir is not an exclusive create everywhere: uutils coreutils (Ubuntu 26.04) lets two concurrent calls on one
+# path both succeed. The noclobber create of the token is (O_EXCL), so only its winner owns the directory and the
+# losing writer leaves it untouched.
+if ! (set -C; : > "$destination/token") 2>/dev/null; then
+  echo "Credential directory must not already exist and its parent must exist" >&2
+  exit 1
+fi
 
 complete=false
 cleanup() {

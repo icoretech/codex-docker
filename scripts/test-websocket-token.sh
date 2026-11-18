@@ -37,6 +37,24 @@ printf 'preserve\n' > "$scratch/file"
 if sh "$generator" "$scratch/file" > "$scratch/stdout" 2> "$scratch/stderr"; then exit 1; fi
 [ "$(cat "$scratch/file")" = preserve ]
 
+# A mkdir that reports success for a directory that already exists must not let a second writer take it over.
+# uutils coreutils 0.10.0 (Ubuntu 26.04's mkdir) does this when two calls race on one path.
+mkdir "$scratch/lying-bin"
+export REAL_MKDIR
+REAL_MKDIR=$(command -v mkdir)
+cat > "$scratch/lying-bin/mkdir" <<'LYING'
+#!/bin/sh
+for target; do :; done
+if [ -d "$target" ]; then exit 0; fi
+exec "$REAL_MKDIR" "$@"
+LYING
+chmod 755 "$scratch/lying-bin/mkdir"
+if PATH="$scratch/lying-bin:$PATH" sh "$generator" "$scratch/first" > "$scratch/stdout" 2> "$scratch/stderr"; then exit 1; fi
+cmp -s "$scratch/first/token" "$scratch/canary"
+expected=$(openssl dgst -sha256 -r "$scratch/first/token" | awk '{print $1}')
+[ "$(cat "$scratch/first/token.sha256")" = "$expected" ]
+[ "$(mode "$scratch/first/token")" = 600 ]
+
 # Two writers must not replace one another's credential directory.
 sh "$generator" "$scratch/race" > "$scratch/race-1.out" 2> "$scratch/race-1.err" &
 first_pid=$!
@@ -71,4 +89,4 @@ for operation in rand dgst; do
 done
 cmp -s "$scratch/first/token" "$scratch/canary"
 
-printf 'private_modes=pass digest_matches=pass independent_tokens=pass overwrite_refusal=pass symlink_refusal=pass canaries_preserved=pass concurrent_creation=pass partial_failure_cleanup=pass\n'
+printf 'private_modes=pass digest_matches=pass independent_tokens=pass overwrite_refusal=pass symlink_refusal=pass canaries_preserved=pass nonexclusive_mkdir_refusal=pass concurrent_creation=pass partial_failure_cleanup=pass\n'
